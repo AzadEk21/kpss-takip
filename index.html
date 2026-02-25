@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPSS Video Takip Sistemi</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="modal-overlay" id="authModal" style="display:none; background:var(--bg-body); z-index: 100000; justify-content:center; align-items:center;">
+    <div class="modal" style="text-align:center; padding: 40px;">
+        <h2 style="margin-bottom: 20px; color:var(--accent);">🎯 KPSS Takip</h2>
+        
+        <div id="authLoginView">
+            <h3 style="margin-bottom:15px; color:var(--text-muted);">Giriş Yap</h3>
+            <form onsubmit="event.preventDefault(); window.submitAuth('login');">
+                <input type="text" id="l_user" class="fancy-input" placeholder="Kullanıcı Adı" required style="width:100%; margin-bottom:10px; text-align:left;">
+                <input type="password" id="l_pass" class="fancy-input" placeholder="Şifre" required style="width:100%; margin-bottom:10px; text-align:left;">
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer; font-size:0.9em;">
+                    <input type="checkbox" id="l_rem" style="width:16px; height:16px; accent-color:var(--accent);" checked> Beni Hatırla
+                </label>
+                <button type="submit" class="btn btn-primary hover-scale" style="width:100%; padding:10px;">Giriş</button>
+            </form>
+            <div style="margin-top:15px; font-size:0.85em; color:var(--text-muted);">
+                Hesabın yok mu? <a href="#" onclick="document.getElementById('authLoginView').style.display='none'; document.getElementById('authRegisterView').style.display='block';" style="color:var(--accent); text-decoration:none;">Kayıt Ol</a>
+            </div>
+        </div>
+
+        <div id="authRegisterView" style="display:none;">
+            <h3 style="margin-bottom:15px; color:var(--text-muted);">Yeni Hesap Oluştur</h3>
+            <form onsubmit="event.preventDefault(); window.submitAuth('register');">
+                <input type="text" id="r_disp" class="fancy-input" placeholder="Ad Soyad (Görünür İsim)" style="width:100%; margin-bottom:10px; text-align:left;">
+                <input type="text" id="r_user" class="fancy-input" placeholder="Kullanıcı Adı (Benzersiz)" required style="width:100%; margin-bottom:10px; text-align:left;">
+                <input type="password" id="r_pass" class="fancy-input" placeholder="Şifre (Min 8, Harf+Sayı)" required style="width:100%; margin-bottom:10px; text-align:left;">
+                <input type="password" id="r_pass_c" class="fancy-input" placeholder="Şifre Tekrar" required style="width:100%; margin-bottom:15px; text-align:left;">
+                <button type="submit" class="btn hover-scale" style="width:100%; padding:10px; background:var(--study); border-color:var(--study); color:white;">Kayıt Ol</button>
+            </form>
+            <div style="margin-top:15px; font-size:0.85em; color:var(--text-muted);">
+                Zaten hesabın var mı? <a href="#" onclick="document.getElementById('authRegisterView').style.display='none'; document.getElementById('authLoginView').style.display='block';" style="color:var(--accent); text-decoration:none;">Giriş Yap</a>
+            </div>
+        </div>
+        <div id="authErrorMsg" style="color:var(--danger); margin-top:15px; font-size:0.85em; font-weight:bold; min-height: 20px;"></div>
+    </div>
+</div>
+
+<div id="mainAppWrapper" style="display:none;">
+    <canvas id="confetti"></canvas>
+    <div class="toast" id="toast">Bildirim</div>
+
+<header>
+    <div class="top-bar">
+        <div class="logo">🎯 KPSS <span>Takip</span></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-primary hover-scale" onclick="UI.openModal('addCourseModal')">➕ Ders Ekle</button>
+            
+            <div class="user-menu-container" style="position:relative;">
+                <button class="btn hover-scale" onclick="document.getElementById('userDropdown').classList.toggle('show')">
+                    <span id="topBarUserName">👤 Profil</span> <span style="font-size:0.7em">▼</span>
+                </button>
+                <div id="userDropdown" class="dropdown-content">
+                    <a href="#" onclick="UI.switchTab('settings'); document.getElementById('userDropdown').classList.remove('show');">⚙️ Ayarlar</a>
+                    <a href="#" onclick="App.exportBackup(); document.getElementById('userDropdown').classList.remove('show');">⬇️ Verilerimi Yedekle</a>
+                    <label>⬆️ Yedek Yükle<input type="file" onchange="App.importBackup(event)" accept=".json" style="display:none;"></label>
+                    <div style="border-top:1px solid var(--border); margin:5px 0;"></div>
+                    <a href="#" onclick="Auth.logout()" style="color:var(--danger)">🚪 Çıkış Yap / Değiştir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tabs-container" id="tabs"></div>
+</header>
+
+    <main id="mainContent"></main>
+
+    <div class="xp-footer-container">
+        <div id="xpExpanded" class="xp-footer-expanded">
+            <div style="text-align:center; display:flex; align-items:center; gap:15px;">
+                <div id="treeEmoji" style="font-size:40px; filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.3));">🌱</div>
+                <div style="text-align:left;">
+                    <div id="treeName" style="font-size:1.1em; font-weight:bold; color:var(--success);">Tohum</div>
+                    <div style="font-size:0.85em; color:var(--text-muted);">Ağacın büyüyor!</div>
+                </div>
+            </div>
+            <div id="dashTasksContainer" style="flex:1; min-width:250px; font-size: 0.85em; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px;">
+            </div>
+        </div>
+        <div class="xp-footer-bar" id="xpFooterBar" onclick="const e = document.getElementById('xpExpanded'); e.style.display = e.style.display === 'flex' ? 'none' : 'flex';">
+            <div style="font-weight:bold; white-space:nowrap;">
+                <span id="playerTitle" style="color:var(--text-main);">Çömez</span> 
+                <span style="background:var(--xp-color); color:white; padding:2px 6px; border-radius:4px; font-size:0.85em; margin-left:5px;">Lv. <span id="playerLevel">1</span></span>
+            </div>
+            <div class="xp-bar-wrapper">
+                <div class="xp-bar-fill" id="xpBarFill"></div>
+                <div class="xp-text-overlay" id="xpTextOverlay">0 / 100 XP</div>
+            </div>
+            <div style="font-weight:bold; font-size:0.9em; white-space:nowrap; display:flex; align-items:center; gap:5px;">
+                <span id="comboText" style="color:var(--warning);">🔥 0</span>
+                <span style="color:var(--text-muted); font-size:10px; margin-left:5px;">▲</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="addCourseModal">
+    <div class="modal">
+        <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">
+            Yeni Ders Ekle
+            <button class="btn" onclick="UI.closeModal('addCourseModal')">✕</button>
+        </h3>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button class="btn" id="tabCSV" onclick="UI.toggleModalTab('csv')" style="flex:1; border-color:var(--accent)">CSV</button>
+            <button class="btn" id="tabYT" onclick="UI.toggleModalTab('yt')" style="flex:1">YouTube</button>
+            <button class="btn" id="tabTest" onclick="UI.toggleModalTab('test')" style="flex:1">Sadece Test</button>
+        </div>
+        <input type="text" id="newCourseName" placeholder="Ders Adı (Örn: Tarih)" style="width:100%; margin-bottom:15px;" required autocomplete="off">
+        <div style="margin-bottom:15px;">
+            <div style="font-size:0.85em; color:var(--text-muted); margin-bottom:5px;">Ders Rengi Seç:</div>
+            <div id="colorPalette" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+        </div>
+        <div id="viewCSV">
+            <label class="btn btn-primary hover-scale" style="width:100%; justify-content:center; padding:10px;">
+                CSV Dosyası Seç ve Yükle
+                <input type="file" onchange="App.handleCSV(event)" accept=".csv" style="display:none;">
+            </label>
+        </div>
+        <div id="viewYT" style="display:none; flex-direction:column; gap:10px;">
+            <input type="text" id="ytPlaylist" placeholder="YouTube Oynatma Listesi Linki" autocomplete="off">
+            <input type="text" id="ytApiKey" placeholder="YouTube API Key" autocomplete="off">
+            <button class="btn btn-primary hover-scale" onclick="App.handleYouTube()" id="ytBtn">Listeyi Çek</button>
+        </div>
+        <div id="viewTest" style="display:none;">
+            <p style="font-size:0.85em; color:var(--text-muted); margin-bottom:10px;">Videosu olmayan, sadece test/deneme takibi için boş ders oluşturur.</p>
+            <button class="btn btn-primary hover-scale" style="width:100%;" onclick="App.createTestCourse()">Oluştur</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.submitAuth = async (type) => {
+        const err = document.getElementById('authErrorMsg');
+        err.innerText = "İşleniyor...";
+        try {
+            if (type === 'login') {
+                const u = document.getElementById('l_user').value;
+                const p = document.getElementById('l_pass').value;
+                const r = document.getElementById('l_rem').checked;
+                await window.Auth.login(u, p, r);
+            } else {
+                const d = document.getElementById('r_disp').value;
+                const u = document.getElementById('r_user').value;
+                const p = document.getElementById('r_pass').value;
+                const pc = document.getElementById('r_pass_c').value;
+                await window.Auth.register(d, u, p, pc);
+            }
+            err.innerText = "";
+            window.location.reload(); // Başarılı, sistemi session ile baştan başlat
+        } catch(error) {
+            err.innerText = error.message;
+        }
+    };
+
+    // Boşluğa tıklanınca dropdown menüsünü kapat
+    window.onclick = function(event) {
+        if (!event.target.matches('.user-menu-container button') && !event.target.closest('.user-menu-container button')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
+            }
+        }
+    }
+</script>
+
+<script type="module" src="js/main.js"></script>
+
+</body>
+</html>
