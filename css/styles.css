@@ -151,3 +151,53 @@ input[type="text"], input[type="number"], input[type="date"], input[type="week"]
 
 .pill-close { display: inline-flex; justify-content: center; align-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.2); font-size: 10px; font-weight: normal; color: var(--text-main); transition: 0.2s; opacity: 0.7; }
 .pill-close:hover { background: var(--danger); color: white; opacity: 1; transform: scale(1.1); }
+
+/* =========================================
+   📱 MOBİL CİHAZLAR İÇİN OPTİMİZASYON (PWA & RESPONSIVE)
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. Üst Barı ve Logoyu Küçültme */
+    header { padding: 10px 10px 0; }
+    .top-bar { flex-wrap: nowrap; gap: 5px; }
+    .logo { font-size: 1rem; }
+    
+    /* 2. Butonlardaki Yazıları Gizleyip İkonları Bırakma (Yerden Tasarruf) */
+    .top-bar .btn-primary { padding: 6px 8px; font-size: 1.2em; }
+    .top-bar .btn-primary span:last-child { display: none; } /* "Ders Ekle" yazısını gizle, sadece ➕ kalsın */
+    .top-bar .profile-btn { padding: 6px 8px; font-size: 1.2em; }
+    #topBarUserName { display: none; } /* "Profil" yazısını gizle */
+
+    /* 3. Kartları ve Gridleri Ekrana Sığdırma */
+    main { padding: 0 5px; margin-top: 10px; }
+    .grid { grid-template-columns: 1fr; gap: 10px; }
+    .card { padding: 12px; }
+    
+    /* 4. Videolar ve Testler Listesini Mobilde Daraltma */
+    .list-item { 
+        grid-template-columns: 25px 1fr !important; 
+        grid-template-rows: auto auto auto; 
+        gap: 5px; 
+        padding: 10px;
+    }
+    .video-title { grid-column: 1 / -1; font-size: 0.9em; margin-bottom: 5px; }
+    .list-item > div:nth-child(3) { grid-column: 1 / -1; text-align: left !important; font-size: 0.8em; }
+    .list-item > div:nth-child(4) { grid-column: 1 / -1; justify-content: flex-start !important; }
+
+    /* 5. Alt Menüleri (Sub-nav) Yatayda Kaydırılabilir Yapma */
+    .sub-nav { padding-bottom: 10px; margin-bottom: 10px; }
+    .sub-nav-pill { padding: 6px 12px; font-size: 0.85em; }
+
+    /* 6. Modalları (Açılır Pencereleri) Tam Ekran Yapma */
+    .modal { width: 95%; max-height: 90vh; overflow-y: auto; padding: 15px; }
+    
+    /* 7. Input ve Butonları Büyütme (Mobilde Tıklaması Kolay Olsun) */
+    input[type="text"], input[type="number"], input[type="password"] { font-size: 16px; /* iOS'ta otomatik zoom'u engeller */ padding: 10px; }
+    .fancy-input { font-size: 16px; }
+
+    /* 8. XP Barını ve Alt Görev Çubuğunu Sabitleme ve Optimize Etme */
+    body { padding-bottom: 80px; } /* Alt bar içeriklerin üstüne binmesin diye boşluk */
+    .xp-footer-bar { padding: 8px; flex-wrap: wrap; justify-content: center; gap: 5px; }
+    .xp-bar-wrapper { min-width: 100%; margin: 5px 0; order: 3; }
+    .xp-footer-expanded { padding: 10px; flex-direction: column; }
+    #dashTasksContainer { width: 100%; min-width: unset; }
+}
